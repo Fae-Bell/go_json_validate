@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "CoG1xZtR5E7Of/WtoFU8Ybgsm84=",
+			"path": "github.com/jeffail/gabs",
+			"revision": "44cbc27138518b15305cb3eef220d04f2d641b9b",
+			"revisionTime": "2017-10-15T11:14:30Z"
+		}
+	],
+	"rootPath": "github.com/Keith-Ball/go_json_validate"
+}
