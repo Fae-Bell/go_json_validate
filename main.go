@@ -8,8 +8,13 @@ import (
 )
 
 func main() {
-	b := []byte(`{"two": "two","three": true}`)
+	b := []byte(`{
+		"one": 1,
+		"two": "ABC",
+		"three":true
+	}`)
 	t := &test.Test{}
 	e := customjson.Unmarshal(b, t)
-	fmt.Println(t, e)
+	fmt.Println(t)
+	fmt.Println(e)
 }

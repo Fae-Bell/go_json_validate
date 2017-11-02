@@ -1,22 +1,20 @@
 package customjson
 
-import (
-	"fmt"
-)
-
 type (
-	TagRegister func(typeName, fieldName, tagValue string, jsonValue interface{}) error
+	TagRegister func(typeName, fieldName, tagValue string, jsonValue interface{}) ValidatorError
 )
 
 var registry = map[string]TagRegister{}
 
 func init() {
 	registry["json.required"] = valueRequired
+	registry["json.pattern"] = valuePatternMatch
 }
 
-func valueRequired(typeName, fieldName, tagValue string, jsonValue interface{}) error {
-	if jsonValue == nil && tagValue != "false" {
-		return fmt.Errorf(`Field "%s" on Type "%s" has been marked as required but has not been set`, fieldName, typeName)
+func RegisterTagValidator(name string, validator TagRegister, overwrite bool) error {
+	if _, exists := registry[name]; exists && !overwrite {
+		return NewTagExistsError(name)
 	}
+	registry[name] = validator
 	return nil
 }

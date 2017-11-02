@@ -19,25 +19,17 @@ func (c *container) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
+	validatorErrs := NewValidatorErrors()
 	// Here's where the magic happens
 	dt := reflect.TypeOf(c.data).Elem()
 
-	for i := 0; i < dt.NumField(); i++ {
-		f := dt.Field(i)
-		tags := StructTagMap(f.Tag)
-		// TODO: Fix to allow for field named/non-json-tagged
-		jsonField := tags["json"]
-		for tagK, tagV := range tags {
-			if v, ok := registry[tagK]; ok {
-				err = v(dt.String(), f.Name, tagV, gC.S(jsonField).Data())
-				if err != nil {
-					return err
-				}
-			}
-		}
+	parseField(gC, dt, validatorErrs)
+
+	if validatorErrs.ContainsErrors() {
+		return validatorErrs
 	}
 
-	return json.Unmarshal(b, &c.data)
+	return json.Unmarshal(b, c.data)
 }
 
 func Unmarshal(b []byte, i interface{}) error {
@@ -48,7 +40,7 @@ func Unmarshal(b []byte, i interface{}) error {
 }
 
 // StructTagMap will convert a StructTag to a map of maps for the values in a Field's tags
-func StructTagMap(tag reflect.StructTag) map[string]string {
+func structTagMap(tag reflect.StructTag) map[string]string {
 	// This code was taken directly from the reflect library
 	tags := map[string]string{}
 	for tag != "" {
@@ -97,4 +89,30 @@ func StructTagMap(tag reflect.StructTag) map[string]string {
 		tags[name] = value
 	}
 	return tags
+}
+
+func parseField(data *gabs.Container, dt reflect.Type, errs *ValidatorErrors) {
+	var jsonField string
+	var ok bool
+	for i := 0; i < dt.NumField(); i++ {
+		f := dt.Field(i)
+		tags := structTagMap(f.Tag)
+		if jsonField, ok = tags["json"]; !ok {
+			jsonField = dt.Name()
+		}
+		fieldValue := data.S(jsonField)
+
+		if f.Type.Kind() == reflect.Struct {
+			parseField(fieldValue, f.Type, errs)
+		}
+
+		for tagK, tagV := range tags {
+			if v, ok := registry[tagK]; ok {
+				err := v(dt.String(), f.Name, tagV, fieldValue.Data())
+				if err != nil {
+					errs.AppendErr(err)
+				}
+			}
+		}
+	}
 }
