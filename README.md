@@ -1,5 +1,5 @@
 https://github.com/golang/go/issues/16426
-
+ 
 This is a stupid simple library that's hoping to accomplish the tag-based validations suggested in the issue raised above. This first iteration does require two Unmarshal's because the current `json.UnmarshalJSON` interface acts on the whole struct and there are no places in the `json` package for a field-by-field interface call.
 
 I'm using `github.com/jeffail/gabs` package for the KISS mentality.
